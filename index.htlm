@@ -5,16 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="https://lucide.dev/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Monitor de Asistencia - Dashboard</title>
-    <!-- Tailwind CSS CDN para estilos rápidos -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { margin: 0; background-color: #f8fafc; }
+      #root { min-height: 100vh; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <!-- 
-      IMPORTANTE: El atributo src debe coincidir exactamente 
-      con el nombre de tu archivo .jsx en GitHub.
-      Si tu archivo es AsistenciaApp.jsx y está en la raíz, usa: ./AsistenciaApp.jsx
+      Para Vercel/Vite, el archivo de entrada debe ser relativo a la raíz.
+      Asegúrate de que en tu GitHub exista el archivo 'App.jsx' en la misma carpeta que este index.html
     -->
-    <script type="module" src="./App.jsx"></script>
+    <script type="module" src="/App.jsx"></script>
   </body>
 </html>
