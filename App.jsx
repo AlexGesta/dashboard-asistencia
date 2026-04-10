@@ -3,11 +3,14 @@ import {
   Users, Calendar, Clock, RefreshCw, CheckCircle2, XCircle, Sparkles, BrainCircuit, FileText, BarChart3, TrendingUp, AlertTriangle, Award, Maximize2, Minimize2, Share2, Copy
 } from 'lucide-react';
 
+// URL del CSV de Google Sheets
 const YOUR_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5QJy5WxLujzVZZkudkyCn4jHPbVzOoFft4vYINFu_Rl3Ei63K9lepYr39YANV9J466L2je0VTOHqC/pub?gid=1756945709&single=true&output=csv";
 const apiKey = ""; // La plataforma proporciona la clave de Gemini en tiempo de ejecución
 
+// Función de limpieza de strings
 const clean = (str) => str ? str.trim().replace(/["']/g, "") : "";
 
+// Función para parsear el CSV
 const parseCSV = (csvText) => {
   const lines = csvText.split('\n').filter(line => line.trim() !== '');
   if (lines.length < 2) return { rawData: [], studentList: [] };
@@ -57,7 +60,7 @@ export default function App() {
       setData(parseCSV(csvText));
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
-      console.error(err);
+      console.error("Error al obtener datos:", err);
     } finally {
       setLoading(false);
     }
@@ -92,6 +95,7 @@ export default function App() {
     setTimeout(() => setShowCopyMessage(false), 3000);
   };
 
+  // Cálculos de estadísticas
   const { matrix, dates, stats, sessionStats, globalAverage } = useMemo(() => {
     if (!data.rawData.length) return { matrix: {}, dates: [], stats: [], sessionStats: [], globalAverage: 0 };
 
@@ -159,7 +163,7 @@ export default function App() {
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
       const result = await response.json();
-      setAiInsight(result.candidates?.[0]?.content?.parts?.[0]?.text || "Error al procesar la respuesta.");
+      setAiInsight(result.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo obtener el análisis en este momento.");
     } catch (err) { setAiInsight("Error de conexión con la IA."); } finally { setIsAnalyzing(false); }
   };
 
@@ -167,7 +171,7 @@ export default function App() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
         <RefreshCw className="animate-spin text-emerald-600 mb-4" size={40} />
-        <p className="text-slate-600 font-medium">Sincronizando datos...</p>
+        <p className="text-slate-600 font-medium">Sincronizando registros en tiempo real...</p>
       </div>
     );
   }
@@ -177,7 +181,7 @@ export default function App() {
       {showCopyMessage && (
         <div className="fixed top-4 right-4 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl z-[100] flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
           <Copy size={16} className="text-emerald-400" />
-          <span className="text-sm font-bold">Enlace copiado al portapapeles</span>
+          <span className="text-sm font-bold">Enlace de acceso copiado</span>
         </div>
       )}
 
@@ -187,86 +191,102 @@ export default function App() {
             <div className="bg-emerald-600 p-1.5 rounded-lg text-white"><Calendar size={20} /></div>
             Monitor de Asistencia
           </h1>
-          <p className="text-slate-500 text-sm mt-1">Última sincronización: {lastUpdated || '--:--'}</p>
+          <p className="text-slate-500 text-sm mt-1">Sincronizado: {lastUpdated || '--:--'}</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <button onClick={fetchData} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition-transform">
-            <RefreshCw size={16} /> <span className="hidden sm:inline">Actualizar</span>
+          <button onClick={fetchData} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
+            <RefreshCw size={16} /> <span className="hidden sm:inline">Recargar</span>
           </button>
-          <button onClick={shareDashboard} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition-transform">
+          <button onClick={shareDashboard} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
             <Share2 size={16} /> <span className="hidden sm:inline">Compartir</span>
           </button>
-          <button onClick={toggleFullscreen} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 text-white border border-slate-800 px-4 py-2 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition-transform">
+          <button onClick={toggleFullscreen} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 text-white border border-slate-800 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-700 active:scale-95 transition-all">
             {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-            <span className="hidden sm:inline">{isFullscreen ? 'Salir' : 'Presentar'}</span>
+            <span className="hidden sm:inline">{isFullscreen ? 'Esc' : 'Presentar'}</span>
           </button>
-          <button onClick={() => getGeminiInsights('analyze')} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform">
+          <button onClick={() => getGeminiInsights('analyze')} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
             <Sparkles size={16} /> ✨ IA
           </button>
         </div>
       </header>
 
+      {/* Resumen de KPI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="bg-blue-100 p-3 rounded-2xl text-blue-600"><TrendingUp size={24} /></div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promedio Total</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cumplimiento Global</p>
             <h2 className="text-2xl font-black text-slate-800">{globalAverage}%</h2>
           </div>
         </div>
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="bg-emerald-100 p-3 rounded-2xl text-emerald-600"><Award size={24} /></div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mejor Sesión</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pico de Asistencia</p>
             <h2 className="text-2xl font-black text-slate-800">{sessionStats.length ? Math.max(...sessionStats.map(s=>s.porcentaje)) : 0}%</h2>
           </div>
         </div>
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="bg-red-100 p-3 rounded-2xl text-red-600"><AlertTriangle size={24} /></div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-wrap leading-tight">Críticos (&lt;50%)</p>
-            <h2 className="text-2xl font-black text-slate-800">{stats.filter(s => s.porcentaje < 50).length}</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-wrap leading-tight">Alerta de Riesgo</p>
+            <h2 className="text-2xl font-black text-slate-800">{stats.filter(s => s.porcentaje < 50).length} alumnos</h2>
           </div>
         </div>
       </div>
 
+      {/* Panel de IA */}
       {showAiPanel && (
         <div className="mb-8 bg-slate-900 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden border border-indigo-500/30">
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div className="flex items-center gap-2 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-400/30">
-              <Sparkles size={14} className="text-indigo-300" /><span className="text-[10px] font-black uppercase tracking-widest">Análisis Gemini</span>
+              <Sparkles size={14} className="text-indigo-300" /><span className="text-[10px] font-black uppercase tracking-widest">Gemini Insights</span>
             </div>
-            <button onClick={() => setShowAiPanel(false)}><XCircle size={20} className="text-slate-400 hover:text-white" /></button>
+            <button onClick={() => setShowAiPanel(false)} className="p-1 hover:bg-white/10 rounded-lg"><XCircle size={20} className="text-slate-400" /></button>
           </div>
           <div className="relative z-10">
-            {isAnalyzing ? <div className="py-4 text-center animate-pulse text-indigo-200 text-sm">IA analizando registros...</div> : 
-              <div className="prose prose-invert max-w-none text-sm text-slate-200 whitespace-pre-wrap">{aiInsight}</div>
-            }
+            {isAnalyzing ? (
+              <div className="py-4 flex items-center gap-3 animate-pulse text-indigo-200 text-sm">
+                <BrainCircuit className="animate-spin" size={18} /> Procesando datos de asistencia...
+              </div>
+            ) : (
+              <div className="prose prose-invert max-w-none text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+                {aiInsight}
+              </div>
+            )}
           </div>
         </div>
       )}
 
+      {/* Grid Principal */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
         <div className="xl:col-span-2 space-y-8">
+          {/* Gráfico de Sesiones */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-              <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-[10px] tracking-widest"><BarChart3 size={16} className="text-blue-500" /> Rendimiento por Sesión</h3>
+            <div className="p-6 border-b border-slate-50">
+              <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-[10px] tracking-widest">
+                <BarChart3 size={16} className="text-blue-500" /> Evolución de Sesiones
+              </h3>
             </div>
             <div className="p-6 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
               {sessionStats.map((s, i) => (
                 <div key={i} className="group">
                   <div className="flex justify-between text-[10px] mb-1 font-bold text-slate-500">
-                    <span>{s.fecha}</span>
+                    <span>{s.fecha} ({s.presentes}/{s.total})</span>
                     <span>{s.porcentaje}%</span>
                   </div>
                   <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden flex">
-                    <div className={`h-full transition-all duration-1000 ${s.porcentaje > 80 ? 'bg-emerald-500' : s.porcentaje > 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${s.porcentaje}%` }} />
+                    <div 
+                      className={`h-full transition-all duration-1000 ${s.porcentaje > 80 ? 'bg-emerald-500' : s.porcentaje > 60 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                      style={{ width: `${s.porcentaje}%` }} 
+                    />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Ranking Estudiantes */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-50 bg-slate-900 text-white flex justify-between items-center">
               <h3 className="font-black uppercase text-xs tracking-widest">Ranking Estudiantil</h3>
@@ -275,7 +295,12 @@ export default function App() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  <tr><th className="p-5">Alumno</th><th className="p-5 text-center">P</th><th className="p-5 text-center">A</th><th className="p-5">Cumplimiento</th></tr>
+                  <tr>
+                    <th className="p-5">Alumno</th>
+                    <th className="p-5 text-center">P</th>
+                    <th className="p-5 text-center">A</th>
+                    <th className="p-5">Cumplimiento</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
                   {stats.map((s, i) => (
@@ -299,9 +324,10 @@ export default function App() {
           </div>
         </div>
 
+        {/* Registro Detallado Lateral */}
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden h-full flex flex-col">
           <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-white sticky top-0 z-20">
-            <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-[10px] tracking-widest"><Clock size={16} className="text-indigo-500" /> Registro Diario</h3>
+            <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-[10px] tracking-widest"><Clock size={16} className="text-indigo-500" /> Bitácora de Registro</h3>
           </div>
           <div className="overflow-x-auto flex-1 max-h-[700px] xl:max-h-none custom-scrollbar">
             <table className="w-full text-left border-collapse">
